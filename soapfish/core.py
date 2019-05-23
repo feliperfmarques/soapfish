@@ -4,7 +4,7 @@ from __future__ import absolute_import
 
 import six
 
-__all__ = ['SOAPError', 'SOAPRequest', 'SOAPResponse']
+__all__ = ['SOAPError', 'SOAPCustomResponse', 'SOAPRequest', 'SOAPResponse']
 
 
 class SOAPError(Exception):
@@ -17,6 +17,17 @@ class SOAPError(Exception):
 
     def __str__(self):
         return '[%s] %s; actor=%s' % (self.code, self.message, self.actor)
+
+class SOAPCustomResponse(object):
+
+    def __init__(self, http_status_code=200, http_content=None, http_headers=None):
+        self.http_status_code = http_status_code
+        self.http_headers = {} if http_headers is None else http_headers
+        self.http_content = http_content
+
+    @property
+    def http_status_text(self):
+        return '%d %s' % (self.http_status_code, six.moves.http_client.responses.get(self.http_status_code))
 
 
 class SOAPResponse(object):

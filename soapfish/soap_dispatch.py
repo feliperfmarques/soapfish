@@ -11,7 +11,7 @@ import six
 from lxml import etree
 
 from . import py2wsdl, py2xsd, wsa
-from .core import SOAPError, SOAPRequest, SOAPResponse
+from .core import SOAPError, SOAPRequest, SOAPResponse, SOAPCustomResponse
 from .utils import uncapitalize, walk_schema_tree
 
 __all__ = ['SOAPDispatcher']
@@ -199,12 +199,16 @@ class SOAPDispatcher(object):
         except SOAPError as e:
             response = e
 
-        if not isinstance(response, SOAPResponse):
+        if not isinstance(response, SOAPCustomResponse) and not isinstance(response, SOAPResponse):
             response = SOAPResponse(response)
 
         response.http_headers['Content-Type'] = SOAP.CONTENT_TYPE
 
-        if isinstance(response.soap_body, SOAPError):
+        if isinstance(response, SOAPCustomResponse):
+            print("Aqui")
+            response.http_content = response.http_content
+            response.http_status_code = response.http_status_code
+        elif isinstance(response.soap_body, SOAPError):
             error = response.soap_body
             response.http_content = SOAP.get_error_response(error.code, error.message, header=response.soap_header)
             response.http_status_code = 500
@@ -260,7 +264,7 @@ class SOAPDispatcher(object):
         obj = hook(**kw) if hook is not None else kw[name.split('-').pop()]
         if name.endswith('-request') and not isinstance(obj, SOAPRequest):
             raise TypeError('Request hooks must return a SOAPRequest.')
-        if name.endswith('-response') and not isinstance(obj, SOAPResponse):
+        if name.endswith('-response') and not (isinstance(obj, SOAPResponse) or isinstance(obj, SOAPCustomResponse)):
             raise TypeError('Response hooks must return a SOAPResponse.')
         return obj
 
