@@ -260,7 +260,7 @@ def schema_validator(schemas):
     # conflicting namespace urls).
     schema_xml = b''.join(etree.tostring(generate_xsd(s)) for s in schemas)
     schema_element = etree.fromstring(schema_xml, parser)
-    xml_schema = etree.XMLSchema(schema_element)
+    xml_schema = etree.XMLSchema(etree.XML(schema_xml))
     return xml_schema.assertValid
 
 
